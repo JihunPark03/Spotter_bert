@@ -1,67 +1,65 @@
+import os
 import torch
-import numpy as np
-import re
-from pathlib import Path
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from model import LSTMAttn
-from preprocess import preprocess, sent2matrix
+MODEL_ID = os.getenv("AD_DETECTOR_MODEL", "answerdotai/ModernBERT-large")
+MAX_LENGTH = int(os.getenv("AD_DETECTOR_MAX_LENGTH", "512"))
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-MODEL_DIR = Path("models")
 model = None
-current_model_path = None
-
-
-def find_latest_model():
-    # Accept both model_v#.pth and model_V#.pth, fallback to model_weights.pth
-    patterns = ["model_v*.pth", "model_V*.pth"]
-    files = []
-    for pat in patterns:
-        files.extend(MODEL_DIR.glob(pat))
-    if not files:
-        fallback = MODEL_DIR / "model_weights.pth"
-        if fallback.exists():
-            return fallback
-        raise FileNotFoundError("No model weights found in models/")
-
-    def version_key(p):
-        m = re.search(r"model[_vV](\d+)\.pth", p.name)
-        return int(m.group(1)) if m else -1
-
-    return max(files, key=version_key)
+tokenizer = None
+current_model_id = None
 
 
 def load_model():
-    global model, current_model_path
+    global model, tokenizer, current_model_id
 
-    latest_path = find_latest_model()
-
-    if model is not None and latest_path == current_model_path:
-        print(f"[ML] Loading current model: {latest_path}")
+    if model is not None and tokenizer is not None and current_model_id == MODEL_ID:
+        print(f"[ML] Using current model: {MODEL_ID}")
         return
 
-    print(f"[ML] Loading new model: {latest_path}")
+    print(f"[ML] Loading model: {MODEL_ID}")
 
-    new_model = LSTMAttn().to(DEVICE)
-    state = torch.load(latest_path, map_location=DEVICE)
-    new_model.load_state_dict(state)
+    new_tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    new_model = AutoModelForSequenceClassification.from_pretrained(
+        MODEL_ID,
+        num_labels=2,
+        ignore_mismatched_sizes=True,
+    ).to(DEVICE)
     new_model.eval()
 
+    tokenizer = new_tokenizer
     model = new_model
-    current_model_path = latest_path
+    current_model_id = MODEL_ID
+
+
+def _ad_label_index() -> int:
+    id2label = getattr(model.config, "id2label", {}) or {}
+    for idx, label in id2label.items():
+        if "ad" in str(label).lower() or "spam" in str(label).lower():
+            return int(idx)
+    return 1 if model.config.num_labels > 1 else 0
+
 
 @torch.no_grad()
 def predict_prob(text: str) -> float:
-    print("0")
-    tokens = preprocess(text)
-    print("1")
-    mat = sent2matrix(tokens)
-    print("2")
-    x = torch.from_numpy(mat).unsqueeze(0).to(DEVICE)
-    print("3")
-    logit = model(x)
-    print("4")
-    prob = torch.sigmoid(logit).item()
+    if model is None or tokenizer is None:
+        load_model()
+
+    inputs = tokenizer(
+        text,
+        truncation=True,
+        padding=True,
+        max_length=MAX_LENGTH,
+        return_tensors="pt",
+    )
+    inputs = {key: value.to(DEVICE) for key, value in inputs.items()}
+    logits = model(**inputs).logits.squeeze(0)
+
+    if model.config.num_labels == 1:
+        prob = torch.sigmoid(logits).item()
+    else:
+        prob = torch.softmax(logits, dim=-1)[_ad_label_index()].item()
 
     return prob

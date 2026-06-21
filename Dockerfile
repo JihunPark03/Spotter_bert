@@ -8,8 +8,7 @@ RUN apt-get update \
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
-    FASTTEXT_PATH=/models/cc.ko.300.bin
+    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
 WORKDIR /app
 

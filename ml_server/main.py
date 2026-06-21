@@ -2,15 +2,13 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from inference import predict_prob, load_model
-from preprocess import preload_assets, preprocess, sent2matrix
 
 app = FastAPI()
 
 
 @app.on_event("startup")
 def preload_assets_startup():
-    print("[ML] Preloading FastText + Okt + Model...")
-    preload_assets()
+    print("[ML] Loading ModernBERT ad detector...")
     load_model()
     print("[ML] Server Ready.")
 

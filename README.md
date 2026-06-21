@@ -1,9 +1,9 @@
 # 🧠 Spotter — ML based AI Ad Detection Extension
 
 Spotter is a full-stack project that detects whether selected text contains promotional or advertisement-like content.
-It combines a Chrome Extension UI, a FastAPI backend, and a dedicated ML inference server powered by a PyTorch model.
+It combines a Chrome Extension UI, a FastAPI backend, and a dedicated ML inference server powered by ModernBERT-large.
 
-The system is designed to be **fast, modular, and continuously improving** through user feedback and periodic model training.
+The system is designed to be **fast and modular**, with feedback collection separated from model inference.
 
 ## Warning : it only works with Korean review/text
 
@@ -26,8 +26,7 @@ Feedback page (User can rate the text):
 * Detect advertisement probability from highlighted text
 * Lightweight API server with caching support
 * Dedicated ML server for efficient inference
-* Feedback-based training pipeline
-* Automatic loading of the latest model version
+* ModernBERT-large ad detector
 
 ---
 
@@ -38,16 +37,16 @@ Chrome Extension
         ↓
 API Server (FastAPI)
         ↓
-ML Server (PyTorch Inference)
+ML Server (ModernBERT Inference)
         ↓
-Model Weights
+Hugging Face Model
 ```
 
 ### Why separate API and ML servers?
 
 * API server stays lightweight and responsive
-* ML model loads only once inside the ML server
-* Training can run independently without stopping the API
+* ModernBERT loads only once inside the ML server
+* Feedback collection can run independently from model inference
 
 ---
 
@@ -64,16 +63,7 @@ Spotter/
 │
 ├── ml-server/           # Model inference server
 │   ├── inference.py
-│   ├── model.py
-│   ├── preprocess.py
-│   └── models/
-│        ├── model_v1.pth
-│        ├── model_v2.pth
-│        └── cc.ko.300.bin
-│
-├── trainer/             # Training pipeline (runs separately)
-│   ├── train.py
-│   └── build_dataset.py
+│   └── requirements.txt
 │
 ├── extension/           # Chrome extension UI
 │
@@ -93,8 +83,8 @@ Spotter/
 **Machine Learning**
 
 * PyTorch
-* LSTM + Attention model
-* FastText embeddings
+* Transformers
+* ModernBERT-large
 
 **Frontend**
 
@@ -132,58 +122,15 @@ prob = request_inference(text)
 
 The ML server:
 
-* Loads the latest model in `models/`
-* Preprocesses the text
-* Converts tokens into embedding matrices
-* Runs PyTorch inference
+* Loads `answerdotai/ModernBERT-large`
+* Tokenizes the text
+* Runs sequence-classification inference
 
 Output:
 
 ```
-prob_ad = sigmoid(logit)
+prob_ad = softmax(logits)[ad_label]
 ```
-
----
-
-# 🔄 Training Pipeline (Trainer)
-
-Spotter improves over time using feedback collected from users.
-
-The **trainer is not always running** — it is executed manually or periodically when enough new feedback has been collected.
-
-Typical workflow:
-
-```
-User Feedback → Database
-        ↓
-trainer/build_dataset.py
-        ↓
-trainer/train.py
-        ↓
-New model_vX.pth generated
-```
-
-### 🟡 When does the trainer run?
-
-The trainer is usually executed when:
-
-* A certain number of new feedback samples exist in the database
-* You want to refresh the model with new data
-* During scheduled training (cron job / manual run)
-
-Example:
-
-```
-cd trainer
-python -m train
-```
-
-After training:
-
-* A new `model_vX.pth` file is saved
-* The ML server automatically detects and uses the newest model
-
-No API restart is required.
 
 ---
 
@@ -268,17 +215,15 @@ Response:
 
 ---
 
-# 🔄 Model Versioning
+# 🔄 Model Configuration
 
-Models are stored as:
+The ML server defaults to:
 
 ```
-models/model_v1.pth
-models/model_v2.pth
-...
+AD_DETECTOR_MODEL=answerdotai/ModernBERT-large
 ```
 
-The ML server automatically loads the newest version based on filename.
+Set `AD_DETECTOR_MAX_LENGTH` to change token truncation length. The default is `512`.
 
 ---
 
