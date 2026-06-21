@@ -37,7 +37,7 @@ classifier = pipeline(
     device=device,
 )
  
-sample = "A bit harder to print than PLA.  Is somewhat stringy unless a high amount of retraction is used.  This adds print time and stress to the extruder motor and filament.\n\nDoes look nice though once the temps and settings get dialed in.\n\nIs a little more pliable than PLA but not as picky as ABS as to how it's printed.  Doesn't have the poisonous smelly odor of ABS either.\n\nI can print this on 3 of my 4 machines.  The 3 that work with high retraction are all not all metal hot ends.  The one that won't print with it is an all metal hot end that clogs with the high retraction rates necessary to stop stringing.  I have tried running this filament on the all metal hot end printer with slow speed (25 mm/s) and small retraction settings.  This does reduce the jams and stringing.  But this printer is capable of running at 150mm/s with PLA.  It does about 100 mm/s with certain high temp plastics, so I"
+sample = "These nylon jaw pads fit my bench vise well and grip parts securely without marring them. I like that they're reversible and work for both flat and round stock. The magnets make installation quick, but they're stronger than expected, and now my drill bits and small tools pick up metal debris. It's not a dealbreaker, but it's a bit annoying."
  
  
 pred = classifier(sample)

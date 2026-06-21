@@ -1,9 +1,18 @@
 import os
+from pathlib import Path
+
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-MODEL_ID = os.getenv("AD_DETECTOR_MODEL", "answerdotai/ModernBERT-large")
+DEFAULT_MODEL_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "testing"
+    / "training"
+    / "modernbert-large-fake-review-detector"
+)
+MODEL_ID = os.getenv("AD_DETECTOR_MODEL", str(DEFAULT_MODEL_DIR))
 MAX_LENGTH = int(os.getenv("AD_DETECTOR_MAX_LENGTH", "512"))
+POSITIVE_LABEL = os.getenv("AD_DETECTOR_POSITIVE_LABEL", "FAKE").lower()
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -22,11 +31,7 @@ def load_model():
     print(f"[ML] Loading model: {MODEL_ID}")
 
     new_tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    new_model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_ID,
-        num_labels=2,
-        ignore_mismatched_sizes=True,
-    ).to(DEVICE)
+    new_model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID).to(DEVICE)
     new_model.eval()
 
     tokenizer = new_tokenizer
@@ -34,11 +39,17 @@ def load_model():
     current_model_id = MODEL_ID
 
 
-def _ad_label_index() -> int:
+def _positive_label_index() -> int:
     id2label = getattr(model.config, "id2label", {}) or {}
     for idx, label in id2label.items():
-        if "ad" in str(label).lower() or "spam" in str(label).lower():
+        if str(label).lower() == POSITIVE_LABEL:
             return int(idx)
+
+    for idx, label in id2label.items():
+        normalized_label = str(label).lower()
+        if any(name in normalized_label for name in ("fake", "synthetic", "ad", "spam")):
+            return int(idx)
+
     return 1 if model.config.num_labels > 1 else 0
 
 
@@ -60,6 +71,6 @@ def predict_prob(text: str) -> float:
     if model.config.num_labels == 1:
         prob = torch.sigmoid(logits).item()
     else:
-        prob = torch.softmax(logits, dim=-1)[_ad_label_index()].item()
+        prob = torch.softmax(logits, dim=-1)[_positive_label_index()].item()
 
     return prob

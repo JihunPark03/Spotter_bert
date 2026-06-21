@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch((e) => {
           if (e?.name === "AbortError") return;
           console.error("Gemini Error:", e);
-          resultEl.textContent = currentStrings().serverError;
+          resultEl.textContent = currentStrings().noReply;
         });
 
       detP
