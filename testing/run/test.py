@@ -1,6 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForMaskedLM
 
-model_id = "answerdotai/ModernBERT-base"
+model_id = "answerdotai/ModernBERT-large"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForMaskedLM.from_pretrained(model_id)
 
