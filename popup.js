@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = document.getElementById("send");
   const resultEl = document.getElementById("result");
   const numberEl = document.getElementById("number");
+  const messageEl = document.getElementById("message");
   const tabCheckText = document.getElementById("tabCheckText");
   const tabEvalText = document.getElementById("tabEvalText");
   const reviewTitle = document.getElementById("reviewTitle");
@@ -24,6 +25,11 @@ document.addEventListener("DOMContentLoaded", () => {
       serverError: "서버 오류가 발생했습니다.",
       noReply: "응답이 없습니다.",
       scoreError: "점수 오류",
+      scoreVeryHigh: "직접 작성하지 않은 광고 리뷰예요.",
+      scoreHigh: "광고로 의심되는 문구가 많아요.",
+      scoreMid: "부분적으로 광고성 문구가 있어요.",
+      scoreLow: "광고 가능성이 낮아요.",
+      scoreVeryLow: "직접 작성한 리뷰에 가까워요.",
       reviewTitle: "인식된 리뷰",
       tabCheck: "리뷰 검사하기",
       tabEval: "리뷰 평가하기",
@@ -40,6 +46,11 @@ document.addEventListener("DOMContentLoaded", () => {
       serverError: "A server error occurred.",
       noReply: "No response received.",
       scoreError: "Score unavailable",
+      scoreVeryHigh: "Likely promotional or generated.",
+      scoreHigh: "Contains many promotional signals.",
+      scoreMid: "Contains some promotional language.",
+      scoreLow: "Low ad likelihood.",
+      scoreVeryLow: "Likely an organic review.",
       reviewTitle: "Detected Review",
       tabCheck: "Check Review",
       tabEval: "Evaluate Reviews",
@@ -88,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const setLoadingUI = () => {
     resultEl.textContent = currentStrings().loading;
     if (numberEl) numberEl.textContent = "";
+    if (messageEl) messageEl.textContent = "";
     if (typeof window.updateProgress === "function") {
       window.updateProgress(0);
     }
@@ -97,14 +109,35 @@ document.addEventListener("DOMContentLoaded", () => {
     resultEl.textContent = reply || currentStrings().noReply;
   };
 
-  const showScore = (score) => {
-    const safeScore = Number.isFinite(score) ? score : 0;
+  const normalizePredictionScore = (score, isRatio = false) => {
+    const numericScore = Number(score);
+    if (!Number.isFinite(numericScore)) return null;
+    const percentScore = isRatio ? numericScore * 100 : numericScore;
+    return Math.min(Math.max(percentScore, 0), 100);
+  };
 
-    if (typeof window.updateProgress === "function") {
-      window.updateProgress(safeScore);
+  const showScore = (score) => {
+    const clampedScore = normalizePredictionScore(score);
+    if (clampedScore === null) {
+      if (numberEl) numberEl.textContent = currentStrings().scoreError;
+      if (messageEl) messageEl.textContent = currentStrings().scoreError;
       return;
     }
-    if (numberEl) numberEl.textContent = String(safeScore);
+
+    if (messageEl) {
+      const t = currentStrings();
+      if (clampedScore >= 80) messageEl.textContent = t.scoreVeryHigh;
+      else if (clampedScore >= 60) messageEl.textContent = t.scoreHigh;
+      else if (clampedScore >= 40) messageEl.textContent = t.scoreMid;
+      else if (clampedScore >= 20) messageEl.textContent = t.scoreLow;
+      else messageEl.textContent = t.scoreVeryLow;
+    }
+
+    if (typeof window.updateProgress === "function") {
+      window.updateProgress(clampedScore);
+      return;
+    }
+    if (numberEl) numberEl.textContent = `${clampedScore.toFixed(0)}%`;
   };
 
   const normalizeSelectedText = (t) => (t || "").trim();
@@ -269,7 +302,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       detP
         .then((rate) => {
-          const score = Number(rate?.prob_ad ?? 0);
+          if (!rate || !Object.prototype.hasOwnProperty.call(rate, "prob_ad")) {
+            throw new Error("Missing prob_ad in detect-ad response");
+          }
+          const directPredictShape = !Object.prototype.hasOwnProperty.call(rate, "is_ad");
+          const score = normalizePredictionScore(rate.prob_ad, directPredictShape);
+          if (score === null) {
+            throw new Error(`Invalid prob_ad in detect-ad response: ${rate.prob_ad}`);
+          }
           cachePut(inputText, { score, detectCached: !!rate?.cached });
           showScore(score);
           if (rate?.cached) console.log("Detect-ad: cache hit");
@@ -278,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (e?.name === "AbortError") return;
           console.error("Detect-ad Error:", e);
           if (numberEl) numberEl.textContent = currentStrings().scoreError;
+          if (messageEl) messageEl.textContent = currentStrings().scoreError;
         });
     } catch (err) {
       if (err?.name === "AbortError") return;

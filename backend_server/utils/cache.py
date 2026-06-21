@@ -14,9 +14,9 @@ redis_client = redis.Redis(
 )
 
 
-def make_cache_key(text: str) -> str:
+def make_cache_key(text: str, namespace: str = "summary") -> str:
     hash_key = hashlib.sha256(text.strip().encode("utf-8")).hexdigest()
-    return f"summary:{hash_key}"
+    return f"{namespace}:{hash_key}"
 
 
 def get_cache(key: str) -> Optional[Dict[str, Any]]:

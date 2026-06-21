@@ -21,7 +21,7 @@ def _load_system_prompt() -> str:
 
 
 def extract_features(user_text: str, client: genai.Client):
-    key = make_cache_key(user_text)
+    key = make_cache_key(user_text, namespace="gemini")
 
     cached = get_cache(key)
     if cached and "reply" in cached:

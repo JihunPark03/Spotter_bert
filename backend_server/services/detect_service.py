@@ -3,7 +3,7 @@ from utils.cache import make_cache_key, get_cache, set_cache
 
 
 def detect_ad(text: str):
-    key = make_cache_key(text)
+    key = make_cache_key(text, namespace="detect")
 
     cached = get_cache(key)
     if cached and "prob_ad" in cached:
