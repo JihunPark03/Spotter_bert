@@ -56,7 +56,8 @@
     <!-- 검사 결과 -->
     <section>
       <h3 class="section-title2" id="resultTitle"> 검사 결과 (광고일 확률)</h3>
-      <div class="progress-box">
+      <div class="progress-box" id="progressBox">
+        <div class="result-loader" id="resultLoader" aria-hidden="true" hidden></div>
         <p class="progress-label">
           <b id="message"></b>
         </p>
@@ -67,14 +68,6 @@
             <div class="progress-bar" id="progressBar"></div>
           </div>
           <script src="progress.js"></script>
-    </div>
-
-    <div class="analysis-status" id="analysisStatus">
-      <div class="loader" id="loader" aria-hidden="true"></div>
-      <strong id="statusTitle">검사 상태</strong>
-      <div id="result"></div>
-      <br/>
-      <!-- <span class="highlight">스스로 작성한 리뷰</span>로 판단했어요. -->
     </div>
     </section>
 

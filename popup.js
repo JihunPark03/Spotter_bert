@@ -4,16 +4,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== DOM cache =====
   const textBox = document.getElementById("text");
   const sendBtn = document.getElementById("send");
-  const resultEl = document.getElementById("result");
   const numberEl = document.getElementById("number");
   const messageEl = document.getElementById("message");
-  const analysisStatus = document.getElementById("analysisStatus");
-  const loader = document.getElementById("loader");
+  const progressBox = document.getElementById("progressBox");
+  const resultLoader = document.getElementById("resultLoader");
   const tabCheckText = document.getElementById("tabCheckText");
   const tabEvalText = document.getElementById("tabEvalText");
   const reviewTitle = document.getElementById("reviewTitle");
   const resultTitle = document.getElementById("resultTitle");
-  const statusTitle = document.getElementById("statusTitle");
   const uploadBtn = document.getElementById("uploadBtn");
   const langToggle = document.getElementById("langToggle");
   const langToggleLabel = document.getElementById("langToggleLabel");
@@ -23,8 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ko: {
       placeholder: "리뷰를 드래그해서 선택하세요.",
       loading: "처리 중...",
-      ready: "리뷰를 선택하고 검사하기를 눌러 주세요.",
-      complete: "검사가 완료되었습니다.",
       selectTextFirst: "텍스트를 먼저 선택해 주세요.",
       serverError: "서버 오류가 발생했습니다.",
       scoreError: "점수 오류",
@@ -37,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tabCheck: "리뷰 검사하기",
       tabEval: "리뷰 평가하기",
       resultTitle: " 검사 결과 (광고일 확률)",
-      statusTitle: "검사 상태",
       sendBtn: "검사하기",
       uploadBtn: "가게 추천받기",
       langToggleLabel: "언어 변경",
@@ -45,8 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     en: {
       placeholder: "Highlight a review to analyze.",
       loading: "Working...",
-      ready: "Select a review and click Analyze.",
-      complete: "Analysis complete.",
       selectTextFirst: "Please select text first.",
       serverError: "A server error occurred.",
       scoreError: "Score unavailable",
@@ -59,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tabCheck: "Check Review",
       tabEval: "Evaluate Reviews",
       resultTitle: " Result (Ad likelihood)",
-      statusTitle: "Analysis Status",
       sendBtn: "Analyze",
       uploadBtn: "Get Store Recommendations",
       langToggleLabel: "Switch language",
@@ -95,22 +87,20 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const setLoadingUI = (isLoading) => {
-    if (analysisStatus) analysisStatus.classList.toggle("is-loading", isLoading);
-    if (loader) loader.hidden = !isLoading;
+    if (progressBox) progressBox.classList.toggle("is-loading", isLoading);
+    if (resultLoader) resultLoader.hidden = !isLoading;
     if (sendBtn) sendBtn.disabled = isLoading;
-    resultEl.textContent = isLoading ? currentStrings().loading : currentStrings().complete;
-    if (numberEl) numberEl.textContent = "";
-    if (messageEl) messageEl.textContent = "";
+    if (numberEl && isLoading) numberEl.textContent = "";
+    if (messageEl && isLoading) messageEl.textContent = currentStrings().loading;
     if (isLoading && typeof window.updateProgress === "function") {
       window.updateProgress(0);
     }
   };
 
-  const showStatus = (msg) => {
-    if (analysisStatus) analysisStatus.classList.remove("is-loading");
-    if (loader) loader.hidden = true;
+  const clearLoadingUI = () => {
+    if (progressBox) progressBox.classList.remove("is-loading");
+    if (resultLoader) resultLoader.hidden = true;
     if (sendBtn) sendBtn.disabled = false;
-    resultEl.textContent = msg;
   };
 
   const normalizePredictionScore = (score, isRatio = false) => {
@@ -256,7 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabEvalText) tabEvalText.innerHTML = `📊<b> ${t.tabEval}</b>`;
     if (reviewTitle) reviewTitle.textContent = t.reviewTitle;
     if (resultTitle) resultTitle.textContent = t.resultTitle;
-    if (statusTitle) statusTitle.textContent = t.statusTitle;
     if (sendBtn) sendBtn.textContent = t.sendBtn;
     if (uploadBtn) uploadBtn.textContent = t.uploadBtn;
     if (langToggleLabel) langToggleLabel.textContent = currentLang === "ko" ? "EN" : "KO";
@@ -271,7 +260,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputText = normalizeSelectedText(textBox.textContent);
 
     if (sameAsPlaceholder(inputText)) {
-      showStatus(currentStrings().selectTextFirst);
+      clearLoadingUI();
+      if (numberEl) numberEl.textContent = "";
+      if (messageEl) messageEl.textContent = currentStrings().selectTextFirst;
       return;
     }
 
@@ -283,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cached = memCache.get(inputText);
     if (cached && Date.now() - cached.ts <= CACHE_TTL_MS) {
       if (typeof cached.score === "number") showScore(cached.score);
-      showStatus(currentStrings().complete);
+      clearLoadingUI();
       return;
     }
 
@@ -301,14 +292,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       cachePut(inputText, { score, detectCached: !!rate?.cached });
       showScore(score);
-      showStatus(currentStrings().complete);
+      clearLoadingUI();
       if (rate?.cached) console.log("Detect-ad: cache hit");
     } catch (err) {
       if (err?.name === "AbortError") return;
       console.error("API Error:", err);
-      showStatus(currentStrings().serverError);
+      clearLoadingUI();
       if (numberEl) numberEl.textContent = currentStrings().scoreError;
-      if (messageEl) messageEl.textContent = currentStrings().scoreError;
+      if (messageEl) messageEl.textContent = currentStrings().serverError;
     }
   };
 
@@ -330,7 +321,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (uiLang && STRINGS[uiLang]) currentLang = uiLang;
       PLACEHOLDER = STRINGS[currentLang].placeholder;
       applyLanguage(currentLang);
-      showStatus(currentStrings().ready);
       loadSelectionIntoTextBox();
     });
   };

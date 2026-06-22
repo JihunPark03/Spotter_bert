@@ -131,11 +131,33 @@
   border:2px solid var(--purple-border);
   border-radius:8px;
   padding:10px 16px;
-  /* display:flex; */
   align-items:center;
   gap:12px;
   margin-top:12px;
   background-color: white;
+  min-height:104px;
+  position:relative;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.progress-box.is-loading{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(166,32,255,.08);
+}
+.result-loader{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:18px;
+  height:18px;
+  border:3px solid var(--primary-light);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spotter-spin .75s linear infinite;
+}
+.result-loader[hidden]{display:none;}
+.btn:disabled{
+  opacity:.68;
+  cursor:wait;
 }
 .progress-label span{text-align:left;font-size:30px;font-weight:700;color:black;margin-bottom:20px;}
 
@@ -184,8 +206,7 @@
 }
 
 
-/* =====  검사 상태  ===== */
-.analysis-status,
+/* =====  AI 추천  ===== */
 .ai-summary{
   border:2px solid var(--purple-border);
   border-radius:8px;
@@ -194,34 +215,11 @@
   font-size:13px;
   margin-top:16px;
   margin-bottom: 16px;
-  min-height:82px;
-  position:relative;
-  transition:border-color .2s ease, box-shadow .2s ease;
 }
-.analysis-status.is-loading{
-  border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(166,32,255,.08);
-}
-.analysis-status .highlight,
 .ai-summary .highlight{color:var(--primary);font-weight:600;}
-.analysis-status #result,
 .ai-summary #result{
   margin-top:6px;
   color:#333;
-}
-.loader{
-  width:18px;
-  height:18px;
-  border:3px solid var(--primary-light);
-  border-top-color:var(--primary);
-  border-radius:50%;
-  float:right;
-  animation:spotter-spin .75s linear infinite;
-}
-.loader[hidden]{display:none;}
-.btn:disabled{
-  opacity:.68;
-  cursor:wait;
 }
 @keyframes spotter-spin{
   to{transform:rotate(360deg);}
