@@ -10,10 +10,7 @@ from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 
-# [NEW SDK IMPORT]
-from google import genai
 from services.detect_service import detect_ad as detect_service
-from services.gemini_service import extract_features as gemini_service
 from services.feedback_service import FeedbackService
 from repositories.feedback_repository import FeedbackRepository
 from db_init import get_db, create_tables
@@ -25,7 +22,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
-api_key = os.getenv("GOOGLE_API_KEY")
 
 # Create tables on startup
 @asynccontextmanager
@@ -35,14 +31,6 @@ async def lifespan(app: FastAPI):
     yield  # Allow FastAPI to start
     print("FastAPI is shutting down...")  # Shutdown logic (optional)
     
-
-# [NEW SDK CLIENT INIT]
-# The client is reusable. We initialize it once if the key exists.
-client = None
-if not api_key:
-    logger.warning("GOOGLE_API_KEY not found in environment variables!")
-else:
-    client = genai.Client(api_key=api_key)
 
 app = FastAPI(
     title="Spotter API",
@@ -61,9 +49,6 @@ app.add_middleware(
 
 
 # ──────────────── Pydantic Models ────────────────
-class GeminiRequest(BaseModel):
-    text: str
-
 class AdDetectRequest(BaseModel):
     text: str
 
@@ -79,7 +64,7 @@ class FeedbackRequest(BaseModel):
 # ──────────────── Endpoints ────────────────
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "Spotter API is running (GenAI v2)"}
+    return {"status": "online", "message": "Spotter API is running"}
 
 @app.post("/detect-ad", response_model=AdDetectResponse)
 async def detect_ad(req: AdDetectRequest):
@@ -104,23 +89,6 @@ async def save_feedback(req: FeedbackRequest, db: Session = Depends(get_db)):
             status_code=500,
             content={"detail": "Failed to save feedback"},
         )
-
-@app.post("/gemini")
-async def extract_features(req: GeminiRequest):
-    user_text = req.text.strip()
-    if not user_text:
-        return JSONResponse(status_code=400, content={"reply": "Empty user_text"})
-
-    if not client:
-        return JSONResponse(status_code=500, content={"reply": "API key not set"})
-
-    try:
-        result = gemini_service(user_text, client)
-        return result
-    except Exception as e:
-        logger.exception("Gemini extraction failed")
-        return JSONResponse(status_code=500, content={"reply": str(e)})
-
 
 @app.post("/recommendations")
 async def get_recommendations():

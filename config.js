@@ -9,7 +9,6 @@ export const BASE_URL = URLS[ENV];
 
 // (선택) API endpoint 중앙관리 — 강력 추천
 export const API = {
-  GEMINI: `${BASE_URL}/gemini`,
   DETECT_AD: `${BASE_URL}/detect-ad`,
   FEEDBACK: `${BASE_URL}/feedback`,
 };

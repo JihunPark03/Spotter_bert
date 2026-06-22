@@ -7,11 +7,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultEl = document.getElementById("result");
   const numberEl = document.getElementById("number");
   const messageEl = document.getElementById("message");
+  const analysisStatus = document.getElementById("analysisStatus");
+  const loader = document.getElementById("loader");
   const tabCheckText = document.getElementById("tabCheckText");
   const tabEvalText = document.getElementById("tabEvalText");
   const reviewTitle = document.getElementById("reviewTitle");
   const resultTitle = document.getElementById("resultTitle");
-  const aiSummaryTitle = document.getElementById("aiSummaryTitle");
+  const statusTitle = document.getElementById("statusTitle");
   const uploadBtn = document.getElementById("uploadBtn");
   const langToggle = document.getElementById("langToggle");
   const langToggleLabel = document.getElementById("langToggleLabel");
@@ -21,9 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
     ko: {
       placeholder: "리뷰를 드래그해서 선택하세요.",
       loading: "처리 중...",
+      ready: "리뷰를 선택하고 검사하기를 눌러 주세요.",
+      complete: "검사가 완료되었습니다.",
       selectTextFirst: "텍스트를 먼저 선택해 주세요.",
       serverError: "서버 오류가 발생했습니다.",
-      noReply: "응답이 없습니다.",
       scoreError: "점수 오류",
       scoreVeryHigh: "직접 작성하지 않은 광고 리뷰예요.",
       scoreHigh: "광고로 의심되는 문구가 많아요.",
@@ -34,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tabCheck: "리뷰 검사하기",
       tabEval: "리뷰 평가하기",
       resultTitle: " 검사 결과 (광고일 확률)",
-      aiSummary: "AI 요약",
+      statusTitle: "검사 상태",
       sendBtn: "검사하기",
       uploadBtn: "가게 추천받기",
       langToggleLabel: "언어 변경",
@@ -42,9 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
     en: {
       placeholder: "Highlight a review to analyze.",
       loading: "Working...",
+      ready: "Select a review and click Analyze.",
+      complete: "Analysis complete.",
       selectTextFirst: "Please select text first.",
       serverError: "A server error occurred.",
-      noReply: "No response received.",
       scoreError: "Score unavailable",
       scoreVeryHigh: "Likely promotional or generated.",
       scoreHigh: "Contains many promotional signals.",
@@ -55,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tabCheck: "Check Review",
       tabEval: "Evaluate Reviews",
       resultTitle: " Result (Ad likelihood)",
-      aiSummary: "AI Summary",
+      statusTitle: "Analysis Status",
       sendBtn: "Analyze",
       uploadBtn: "Get Store Recommendations",
       langToggleLabel: "Switch language",
@@ -69,12 +73,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== In-memory cache (popup session) =====
   // key: text string
-  // val: { gemReply: string, gemCached?: boolean, score?: number, detectCached?: boolean, ts: number }
+  // val: { score?: number, detectCached?: boolean, ts: number }
   const memCache = new Map();
 
   // ===== Request de-dupe (same text -> share promise) =====
   // key: text string
-  // val: { gemP: Promise<any>, detP: Promise<any> }
+  // val: { detP: Promise<any> }
   const inflightByText = new Map();
 
   // AbortController for the *current* click (if user clicks multiple times quickly)
@@ -90,23 +94,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const setStatus = (msg) => {
-    if (!resultEl.textContent || resultEl.textContent === PLACEHOLDER) {
-      resultEl.textContent = msg;
-    }
-  };
-
-  const setLoadingUI = () => {
-    resultEl.textContent = currentStrings().loading;
+  const setLoadingUI = (isLoading) => {
+    if (analysisStatus) analysisStatus.classList.toggle("is-loading", isLoading);
+    if (loader) loader.hidden = !isLoading;
+    if (sendBtn) sendBtn.disabled = isLoading;
+    resultEl.textContent = isLoading ? currentStrings().loading : currentStrings().complete;
     if (numberEl) numberEl.textContent = "";
     if (messageEl) messageEl.textContent = "";
-    if (typeof window.updateProgress === "function") {
+    if (isLoading && typeof window.updateProgress === "function") {
       window.updateProgress(0);
     }
   };
 
-  const showGemini = (reply) => {
-    resultEl.textContent = reply || currentStrings().noReply;
+  const showStatus = (msg) => {
+    if (analysisStatus) analysisStatus.classList.remove("is-loading");
+    if (loader) loader.hidden = true;
+    if (sendBtn) sendBtn.disabled = false;
+    resultEl.textContent = msg;
   };
 
   const normalizePredictionScore = (score, isRatio = false) => {
@@ -227,13 +231,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const payload = JSON.stringify({ text });
 
-    const gemP = postJSON(API.GEMINI, payload, signal);
     const detP = postJSON(API.DETECT_AD, payload, signal);
 
-    const pair = { gemP, detP };
+    const pair = { detP };
     inflightByText.set(text, pair);
 
-    Promise.allSettled([gemP, detP]).then(() => {
+    Promise.allSettled([detP]).then(() => {
       const cur = inflightByText.get(text);
       if (cur === pair) inflightByText.delete(text);
     });
@@ -253,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (tabEvalText) tabEvalText.innerHTML = `📊<b> ${t.tabEval}</b>`;
     if (reviewTitle) reviewTitle.textContent = t.reviewTitle;
     if (resultTitle) resultTitle.textContent = t.resultTitle;
-    if (aiSummaryTitle) aiSummaryTitle.textContent = t.aiSummary;
+    if (statusTitle) statusTitle.textContent = t.statusTitle;
     if (sendBtn) sendBtn.textContent = t.sendBtn;
     if (uploadBtn) uploadBtn.textContent = t.uploadBtn;
     if (langToggleLabel) langToggleLabel.textContent = currentLang === "ko" ? "EN" : "KO";
@@ -268,62 +271,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputText = normalizeSelectedText(textBox.textContent);
 
     if (sameAsPlaceholder(inputText)) {
-      resultEl.innerText = currentStrings().selectTextFirst;
+      showStatus(currentStrings().selectTextFirst);
       return;
     }
 
     if (currentAbort) currentAbort.abort();
     currentAbort = new AbortController();
 
-    setLoadingUI();
+    setLoadingUI(true);
 
     const cached = memCache.get(inputText);
     if (cached && Date.now() - cached.ts <= CACHE_TTL_MS) {
-      if (cached.gemReply) showGemini(cached.gemReply);
       if (typeof cached.score === "number") showScore(cached.score);
+      showStatus(currentStrings().complete);
       return;
     }
 
     try {
-      const { gemP, detP } = getOrStartInflight(inputText, currentAbort.signal);
+      const { detP } = getOrStartInflight(inputText, currentAbort.signal);
+      const rate = await detP;
 
-      gemP
-        .then((gem) => {
-          const reply = gem?.reply || currentStrings().noReply;
-          cachePut(inputText, { gemReply: reply, gemCached: !!gem?.cached });
-          showGemini(reply);
-          if (gem?.cached) console.log("Gemini: cache hit");
-        })
-        .catch((e) => {
-          if (e?.name === "AbortError") return;
-          console.error("Gemini Error:", e);
-          resultEl.textContent = currentStrings().noReply;
-        });
-
-      detP
-        .then((rate) => {
-          if (!rate || !Object.prototype.hasOwnProperty.call(rate, "prob_ad")) {
-            throw new Error("Missing prob_ad in detect-ad response");
-          }
-          const directPredictShape = !Object.prototype.hasOwnProperty.call(rate, "is_ad");
-          const score = normalizePredictionScore(rate.prob_ad, directPredictShape);
-          if (score === null) {
-            throw new Error(`Invalid prob_ad in detect-ad response: ${rate.prob_ad}`);
-          }
-          cachePut(inputText, { score, detectCached: !!rate?.cached });
-          showScore(score);
-          if (rate?.cached) console.log("Detect-ad: cache hit");
-        })
-        .catch((e) => {
-          if (e?.name === "AbortError") return;
-          console.error("Detect-ad Error:", e);
-          if (numberEl) numberEl.textContent = currentStrings().scoreError;
-          if (messageEl) messageEl.textContent = currentStrings().scoreError;
-        });
+      if (!rate || !Object.prototype.hasOwnProperty.call(rate, "prob_ad")) {
+        throw new Error("Missing prob_ad in detect-ad response");
+      }
+      const directPredictShape = !Object.prototype.hasOwnProperty.call(rate, "is_ad");
+      const score = normalizePredictionScore(rate.prob_ad, directPredictShape);
+      if (score === null) {
+        throw new Error(`Invalid prob_ad in detect-ad response: ${rate.prob_ad}`);
+      }
+      cachePut(inputText, { score, detectCached: !!rate?.cached });
+      showScore(score);
+      showStatus(currentStrings().complete);
+      if (rate?.cached) console.log("Detect-ad: cache hit");
     } catch (err) {
       if (err?.name === "AbortError") return;
       console.error("API Error:", err);
-      resultEl.textContent = currentStrings().serverError;
+      showStatus(currentStrings().serverError);
+      if (numberEl) numberEl.textContent = currentStrings().scoreError;
+      if (messageEl) messageEl.textContent = currentStrings().scoreError;
     }
   };
 
@@ -345,6 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (uiLang && STRINGS[uiLang]) currentLang = uiLang;
       PLACEHOLDER = STRINGS[currentLang].placeholder;
       applyLanguage(currentLang);
+      showStatus(currentStrings().ready);
       loadSelectionIntoTextBox();
     });
   };
