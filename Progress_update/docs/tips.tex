@@ -1,0 +1,35 @@
+\begin{frame}
+\frametitle{Tips: 数式のハイライト}
+
+	\begin{itemize}
+	\item {\sf underbrace}, {\sf overbrace} コマンドの使用
+	\item TikZの使用
+\begin{align*}
+    f(\vec{w}, b) = \eqhc[red]{$\displaystyle \sum_{i=1}^n \left(y_i - \vec{w}^\top \vec{x}_i \right)^2$}{Loss function}
+        +
+        \eqhc[blue]{$\displaystyle \frac{\lambda}{2} \left\|\vec{w} \right\|^2$}{\rm regularizer}
+\end{align*}
+	\item 吹き出しの使用
+	
+\begin{center}
+%\tikz[remember picture]{\node (bgraph){$G = (S,T;E)$};}
+\tikz[remember picture]{\node (matnorm){$\| \mat{A} \|$};}
+\begin{tikzpicture}[remember picture, overlay]
+    \node[rectangle callout, fill=magenta!80, white, callout absolute pointer={(matnorm.east)}, right=of matnorm]{matrix\ norm}; %
+\end{tikzpicture}
+\end{center}
+	
+	\item TikZ + 吹き出しの使用
+	
+\begin{align*}
+    \tikz[remember picture]{\node (loss){
+    $f(\vec{w}, b)$ = \eqh[green]{$\displaystyle \sum_{i=1}^n \left(y_i - \vec{w}^\top \vec{x}_i \right)^2$}
+    };}
+\end{align*}
+	
+\begin{tikzpicture}[remember picture, overlay]
+    \node[rectangle callout, fill=gray!80, white, callout absolute pointer={(loss.east)}, right=of loss]{\rm loss\ function}; %
+\end{tikzpicture}
+	
+	\end{itemize}	
+\end{frame}

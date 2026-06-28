@@ -1,0 +1,106 @@
+\begin{frame}{Final Experimental Setup}
+\begin{table}
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Item & Setting \\
+\midrule
+Task & Binary fake review detection \\
+Dataset & \texttt{testing/data/deepseek\_synthetic\_reviews.jsonl} \\
+Model & \texttt{answerdotai/ModernBERT-large} \\
+Train/eval split & 90/10, seed 42 \\
+Training & 5 epochs, batch size 8, grad. accumulation 4 \\
+Methods & Full, LoRA, AdaLoRA, Star-LoRA \\
+Metrics & F1, eval loss, runtime, throughput \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Baselines and Star-LoRA Configuration}
+\begin{table}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Method & Rank & Init rank & Alpha & Dropout \\
+\midrule
+LoRA & 8 & -- & 16 & 0.10 \\
+AdaLoRA & 8 & 12 & 16 & 0.10 \\
+Star-LoRA & 12 & 24 & 48 & 0.05 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{6pt}
+\begin{itemize}
+  \item Star-LoRA selected a larger rank from the full training set statistics.
+  \item Recorded dataset statistics: balanced labels, token sparsity \(0.450\), label entropy \(\approx 1.0\).
+  \item All adapter methods target ModernBERT \texttt{Wqkv} and \texttt{Wo} modules.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Final Full-Data Results}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.96\linewidth]{figures/final_summary.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Final Metrics Table}
+\begin{table}
+\centering
+\scriptsize
+\begin{tabular}{lrrrr}
+\toprule
+Method & Final F1 & Eval loss & Runtime (s) & Samples/s \\
+\midrule
+Full & 0.9990 & 0.0124 & 2548.62 & 70.63 \\
+LoRA & \textbf{0.9992} & \textbf{0.0018} & \textbf{2225.13} & \textbf{80.89} \\
+AdaLoRA & 0.9960 & 0.0121 & 2654.11 & 67.82 \\
+Star-LoRA & 0.9975 & 0.0078 & 2745.00 & 65.57 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{6pt}
+\begin{itemize}
+  \item Star-LoRA improves over AdaLoRA on the final full-data run.
+  \item Fixed LoRA remains the strongest result on this dataset.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Data-Size Sweep}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.93\linewidth]{figures/datasize_f1_logx.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Where Star-LoRA Helps}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.93\linewidth]{figures/star_lora_delta.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Dataset-Aware Capacity Selected by Star-LoRA}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.93\linewidth]{figures/rank_policy.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Stability-Aware Importance Monitor}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.93\linewidth]{figures/stability_by_layer.png}
+\end{figure}
+
+\vspace{-2pt}
+\begin{itemize}
+  \item The stability log makes layer-wise adapter importance inspectable after training.
+  \item In the final Star-LoRA run, attention input projection \texttt{Wqkv} has higher mean stable importance than \texttt{Wo}.
+\end{itemize}
+\end{frame}

@@ -1,0 +1,42 @@
+\begin{frame}{Background: Parameter-Efficient Fine-Tuning (PEFT)}
+\begin{itemize}
+  \item Large language models achieve strong transfer performance, but full fine-tuning updates all model parameters.
+  \item Low-Rank Adaptation (LoRA) reduces trainable parameters by inserting low-rank update matrices:
+  \[
+    W' = W + \Delta W,\quad \Delta W = BA,\quad
+    A \in \mathbb{R}^{r \times d},\ B \in \mathbb{R}^{k \times r}.
+  \]
+  \item The rank \(r\) controls the adaptation capacity and computational cost.
+  \item In low-resource settings, a fixed rank can be too large for simple or noisy datasets and too small for complex datasets.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Problem Setting}
+\begin{block}{Research Question}
+Can AdaLoRA be improved by selecting adapter capacity from dataset characteristics before fine-tuning?
+\end{block}
+
+\vspace{8pt}
+\begin{itemize}
+  \item Standard LoRA: uses a fixed rank and fixed target modules.
+  \item Standard AdaLoRA: adaptively reallocates rank during training, but the initial configuration is usually hand-designed.
+  \item Proposed method: Star-LoRA estimates dataset difficulty before training and uses it to configure AdaLoRA.
+  \item Final task in this project: fake review detection with ModernBERT-large.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Motivation}
+\begin{itemize}
+  \item Low-resource fine-tuning is sensitive to overfitting and unstable gradient signals.
+  \item Different datasets have different properties:
+  \begin{itemize}
+    \item sample count,
+    \item label imbalance,
+    \item token sparsity,
+    \item token-frequency skew,
+    \item label entropy,
+    \item input-embedding variance.
+  \end{itemize}
+  \item These statistics can indicate whether the model needs smaller, larger, or broader adapter capacity.
+\end{itemize}
+\end{frame}

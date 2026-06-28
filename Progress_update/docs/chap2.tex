@@ -1,0 +1,47 @@
+\begin{frame}{Related Works: LoRA}
+\begin{itemize}
+  \item LoRA freezes the pretrained model and trains low-rank matrices in selected layers.
+  \item It significantly reduces trainable parameters while preserving strong downstream performance.
+  \item A key hyperparameter is the rank \(r\), which is often selected manually.
+\end{itemize}
+
+\vspace{8pt}
+\begin{block}{Limitation}
+Fixed-rank LoRA does not adapt its capacity to the dataset or to training dynamics.
+\end{block}
+\end{frame}
+
+\begin{frame}{Related Works: AdaLoRA}
+\begin{itemize}
+  \item AdaLoRA allocates parameter budget adaptively across LoRA modules.
+  \item It starts from a larger initial rank and prunes/reallocates rank according to importance.
+  \item It improves parameter efficiency compared with fixed-rank LoRA.
+\end{itemize}
+
+\vspace{8pt}
+\begin{block}{Limitation}
+The base target rank, initial rank, dropout, schedule, and target module set are still usually chosen without explicit dataset profiling.
+\end{block}
+\end{frame}
+
+\begin{frame}{Gap in Existing Methods}
+\begin{table}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Rank Adaptation & Dataset Profiling & Stability Logging \\
+\midrule
+Full fine-tuning & -- & -- & -- \\
+LoRA & No & No & Optional \\
+AdaLoRA & Yes & No & Optional \\
+Proposed method & Yes & Yes & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{8pt}
+\begin{itemize}
+  \item This work focuses on the missing link between dataset statistics and AdaLoRA configuration.
+\end{itemize}
+\end{frame}

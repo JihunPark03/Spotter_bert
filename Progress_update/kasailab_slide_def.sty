@@ -1,0 +1,127 @@
+%%
+%% This is file `kasailab_beamer_def.sty',
+%%
+\def\next{LaTeX2e}
+\ProvidesPackage{kasailab_slide_def}
+\typeout{Document Style `kasailab_slide_def' - environment}
+
+% color box
+\definecolor{blueish}{rgb}{0.2,0.2,0.7} % color for default theme of Beamer
+\usepackage[listings,theorems]{tcolorbox}
+\tcbset{colback=white,colframe=blueish,arc=0mm,boxrule=1.0pt,}
+
+% change the size of footnote font into "tiny"
+\setbeamerfont{footnote}{size=\tiny}
+
+% box
+\usepackage{fancybox}
+
+% mdframe
+\usepackage{mdframed}
+
+% itembox
+\usepackage{ascmac}
+
+% double underline, wave underline, delete line, ..
+\usepackage{ulem} % uline{}, uuline{}, uwave{}, sout{}
+
+% bibtex
+\bibliographystyle{apalike}
+
+% for math env.
+\usefonttheme{professionalfonts} 
+
+% page number
+\setbeamertemplate{footline}[frame number]  
+
+% header navigation bar
+\useoutertheme[subsection=false]{smoothbars}
+
+% delete navigation bar
+\setbeamertemplate{navigation symbols}{}
+
+% Bold font for Japanese
+\renewcommand{\kanjifamilydefault}{\gtdefault}
+
+% "Hiragino" font for Mac use
+\usepackage[deluxe,expert]{otf}
+%\renewcommand{\kanjifamilydefault}{mg}
+
+% tikz
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+% highlight equations by tikz
+\newcommand{\eqh}[2][black]{\tikz[baseline=(x.base)]{\node[rectangle,rounded corners,fill=#1!10](x){#2};}}
+\newcommand{\eqhc}[3][black]{\tikz[baseline=(x.base)]{\node[rectangle,rounded corners,fill=#1!10](x){#2} node[below of=x, color=#1]{#3};}}
+
+% balloon
+\usepackage{pxpgfmark}   
+\usetikzlibrary{shapes.callouts}
+
+% convert the representation of 'today' into Japanese style. 
+\date{\number\year 年\number\month 月\number\day 日}
+
+% item space
+\newcommand{\itemspace}{\vspace{0.5cm}}
+% vertical space
+\newcommand{\vsp}{\vspace*{0.2cm}} % vspace plus
+\newcommand{\vsm}{\vspace*{-0.2cm}}% vspace minus
+\newcommand{\hsp}{\hspace*{0.2cm}} % vspace plus
+\newcommand{\hsm}{\hspace*{-0.2cm}}% vspace minus
+
+% activate the menu at the bottom of frame
+%\usepackage{bxdpx-beaer}
+
+% use helvetica
+%\usepackage{helvet}
+
+% adjust the indent of itemize
+%\usepackage{setspace}
+
+% adjust the space between Frame Title and Content Topic is solved
+\addtobeamertemplate{frametitle}{\vspace*{-0.0cm}}{\vspace*{-0.2cm}}
+
+% Color
+\newcommand{\IMPR}[1]{\textcolor{red}{#1}}
+\newcommand{\IMPM}[1]{\textcolor{magenta}{#1}}
+\newcommand{\IMPC}[1]{\textcolor{cyan}{#1}}
+\newcommand{\IMPOL}[1]{\textcolor{olive}{#1}}
+\newcommand{\IMPOR}[1]{\textcolor{orange}{#1}}
+\newcommand{\IMPB}[1]{\textcolor{blueish}{#1}}
+\newcommand{\IMPV}[1]{\textcolor{violet}{#1}}
+\newcommand{\IMPT}[1]{\textcolor{teal}{#1}}
+\newcommand{\IMPPR}[1]{\textcolor{purple}{#1}}
+\definecolor{forestgreen}{rgb}{0.13, 0.55, 0.13}
+\newcommand{\IMPFG}[1]{\textcolor{forestgreen}{#1}}
+\definecolor{firebrick}{rgb}{0.7, 0.13, 0.13}
+\newcommand{\IMPFB}[1]{\textcolor{firebrick}{#1}}
+
+% Color box
+\newcommand{\CBR}[1]{\colorbox{red}{#1}}
+\newcommand{\CBW}[1]{\colorbox{white}{#1}}
+\newcommand{\CBM}[1]{\colorbox{magenta}{#1}}
+\newcommand{\CBC}[1]{\colorbox{cyan}{#1}}
+\newcommand{\CBOL}[1]{\colorbox{olive}{#1}}
+\newcommand{\CBOR}[1]{\colorbox{orange}{#1}}
+\newcommand{\CBB}[1]{\colorbox{blueish}{#1}}
+\newcommand{\CBV}[1]{\colorbox{violet}{#1}}
+\newcommand{\CBT}[1]{\colorbox{teal}{#1}}
+\newcommand{\CBPR}[1]{\colorbox{purple}{#1}}
+\newcommand{\CBY}[1]{\colorbox{yellow}{#1}}
+\definecolor{babyblue}{rgb}{0.54, 0.81, 0.94}
+\newcommand{\CBBBB}[1]{\colorbox{babyblue}{#1}}
+\definecolor{mossgreen}{rgb}{0.68, 0.87, 0.68}
+\newcommand{\CBMG}[1]{\colorbox{mossgreen}{#1}}
+\definecolor{mayablue}{rgb}{0.45, 0.76, 0.98}
+\newcommand{\CBMB}[1]{\colorbox{mayablue}{#1}}
+\definecolor{lightgray}{rgb}{0.83, 0.83, 0.83}
+\newcommand{\CBLG}[1]{\colorbox{lightgray}{#1}}
+\definecolor{lightlightgray}{rgb}{0.93, 0.93, 0.93}
+\newcommand{\CBLLG}[1]{\colorbox{lightlightgray}{#1}}
+
+
+
+
+%%
+%% End of file `kasailab_slide_def.sty'.

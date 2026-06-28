@@ -1,0 +1,57 @@
+\documentclass[dvipdfmx,cjk,t,10pt]{beamer}
+%\documentclass[cjk,t]{beamer}
+
+\usepackage{kasailab_slide_def}
+\usepackage{./kasailab_math}
+\usepackage{color}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{url}
+
+\setbeamertemplate{footline}[text line]{%
+  \parbox{1.00\linewidth}{
+    \vspace*{-8pt}\hspace*{-20pt}\textcolor{gray}{KASAI Laboratory, WASEDA University. All Rights Reserved.}}
+  \hfill%
+  \parbox{0.07\linewidth}{
+    \vspace*{-8pt} \hfill \textcolor{gray}{\raggedright\insertframenumber /{}\inserttotalframenumber}
+  }
+}
+
+%% Table of contents slide
+% Not used for short progress reports.
+%\AtBeginSection[]{
+%    \frame{\tableofcontents[currentsection, hideallsubsections]}
+%}
+
+\begin{document}
+
+\title{Final Presentation: Star-LoRA for Dataset-Aware Adapter Fine-Tuning}
+\author[shortname]{Jihun Park}
+\institute[shortinst]{Waseda University, Fundamental Science and Engineering}
+%\date{2026年5月20日}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section{Introduction}
+\input{docs/chap1}
+
+\section{Related Works}
+\input{docs/chap2}
+
+\section{Proposed Approach}
+\input{docs/chap3}
+
+\section{Experiment}
+\input{docs/chap4}
+
+\section{Conclusion and Future Work}
+\input{docs/chap5}
+
+\section{References}
+\input{docs/references}
+
+\end{document}

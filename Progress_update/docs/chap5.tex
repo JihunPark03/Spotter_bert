@@ -1,0 +1,30 @@
+\begin{frame}{Conclusion}
+\begin{block}{Main Finding}
+Star-LoRA makes AdaLoRA more data-aware and improves over the manually configured AdaLoRA baseline, but fixed LoRA is still the best method on this fake-review dataset.
+\end{block}
+
+\vspace{6pt}
+\begin{itemize}
+  \item Full-data F1: Star-LoRA \(0.9975\), AdaLoRA \(0.9960\), LoRA \(0.9992\).
+  \item In the data-size sweep, Star-LoRA is often better than AdaLoRA at very small and very large sample budgets.
+  \item The rank policy responds to data size by increasing target rank from 5 to 11 in the sweep, and to 12 for the full run.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Limitations}
+\begin{itemize}
+  \item The current rank policy is hand-designed, so it can over-allocate capacity when a simple fixed-rank LoRA is already sufficient.
+  \item Results are from one dataset split and one major task family: fake review classification.
+  \item Stability scores are logged and visualized, but they are not yet used directly to update PEFT AdaLoRA's internal allocator.
+  \item Star-LoRA has higher runtime than LoRA in the final run because it starts with larger adaptive-rank capacity.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Future Work}
+\begin{itemize}
+  \item Learn the rank policy from multiple datasets instead of using fixed scaling constants.
+  \item Add an ablation study for each statistic: size, sparsity, skew, entropy, and embedding variance.
+  \item Use stability scores during training, not only as post-hoc logging.
+  \item Test whether Star-LoRA helps more on noisier, imbalanced, or lower-resource review datasets.
+\end{itemize}
+\end{frame}

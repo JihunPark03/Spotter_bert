@@ -1,0 +1,165 @@
+\begin{frame}{Proposed Method Overview}
+\begin{block}{Dataset-Aware and Stability-Aware AdaLoRA}
+The method extends AdaLoRA with a pre-training dataset analyzer and a training-time stability monitor.
+\end{block}
+
+\vspace{8pt}
+\begin{enumerate}
+  \item Analyze the training subset before fine-tuning.
+  \item Convert dataset statistics into AdaLoRA hyperparameters.
+  \item Select target modules according to dataset complexity.
+  % \item Log stability-aware importance scores during training.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Dataset Statistics}
+\begin{table}
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Statistic & Purpose \\
+\midrule
+\(N\) & Low-resource sample size \\
+Class imbalance & Detect label skew and overfitting risk \\
+Token sparsity & Detect limited lexical coverage \\
+Token-frequency skew & Detect vocabulary concentration \\
+Label entropy & Estimate task uncertainty/complexity \\
+Embedding variance & Estimate input diversity in representation space \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Dataset-Aware Rank Policy}
+\begin{itemize}
+  \item The target rank is computed from three scaling factors:
+  \[
+    r_{\mathrm{target}}
+    =
+    \mathrm{clip}
+    \left(
+      r_{\mathrm{base}}
+      \cdot f_{\mathrm{size}}(N)
+      \cdot g_{\mathrm{dist}}
+      \cdot g_{\mathrm{comp}},
+      r_{\min}, r_{\max}
+    \right).
+  \]
+  \item Size factor:
+  \[
+    f_{\mathrm{size}}(N)
+    =
+    \mathrm{clip}
+    \left(
+      \frac{\log(1+N)}{\log(1+5000)}, 0.3, 1.5
+    \right).
+  \]
+  \item Distribution factor decreases rank when imbalance, sparsity, or skew is high.
+  \item Complexity factor increases rank when entropy or embedding variance is high.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Distribution and Complexity Scaling}
+\begin{align*}
+  g_{\mathrm{dist}}
+  &=
+  \mathrm{clip}
+  \left(
+    1 - 0.5
+    \left(
+      0.5I_{\mathrm{class}}
+      + 0.3S_{\mathrm{token}}
+      + 0.2K_{\mathrm{token}}
+    \right),
+    0.5, 1.0
+  \right), \\
+  g_{\mathrm{comp}}
+  &=
+  \mathrm{clip}
+  \left(
+    1
+    + 0.5H_{\mathrm{label}}
+    + 0.3V_{\mathrm{emb}},
+    1.0, 2.0
+  \right).
+\end{align*}
+
+\vspace{4pt}
+\begin{itemize}
+  \item \(I_{\mathrm{class}}\): class imbalance.
+  \item \(S_{\mathrm{token}}\): token sparsity.
+  \item \(K_{\mathrm{token}}\): normalized token-frequency skew.
+  \item \(H_{\mathrm{label}}\), \(V_{\mathrm{emb}}\): task complexity indicators.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Adaptive AdaLoRA Configuration}
+\begin{itemize}
+  \item After computing \(r_{\mathrm{target}}\), the method sets:
+  \[
+    r_{\mathrm{init}} = \max(r_{\mathrm{target}} + 8,\ 2r_{\mathrm{target}}),
+  \]
+  \[
+    \alpha = \max(4r_{\mathrm{target}},\ 2r_{\mathrm{base}}).
+  \]
+  \item Dropout is increased for very small, imbalanced, or sparse datasets:
+  \[
+    p_{\mathrm{drop}} \in [0.05, 0.20].
+  \]
+  \item AdaLoRA schedule:
+  \[
+    t_{\mathrm{init}}=0.2T,\quad
+    t_{\mathrm{final}}=0.85T,\quad
+    \Delta t=0.05T.
+  \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{ModernBERT Target Modules}
+\begin{itemize}
+  \item ModernBERT does not use the usual \texttt{q\_proj}/\texttt{v\_proj} names.
+  \item The implementation expands compact module names to exact layer paths:
+  \[
+    \{\texttt{model.layers.*.attn.Wqkv},\ \texttt{model.layers.*.attn.Wo}\}.
+  \]
+  \item This keeps LoRA, AdaLoRA, and Star-LoRA comparable because all adapter methods target the same attention modules.
+  \item The difference is the capacity policy: fixed rank for LoRA/AdaLoRA, dataset-aware rank for Star-LoRA.
+\end{itemize}
+\end{frame}
+
+% \begin{frame}{Stability-Aware Importance Monitoring}
+% \begin{itemize}
+%   \item Raw LoRA parameter importance is computed from parameter-gradient interaction:
+%   \[
+%     I_t(\theta)
+%     =
+%     \mathrm{mean}
+%     \left(
+%       |\theta_t \odot \nabla_{\theta_t}\mathcal{L}|
+%     \right).
+%   \]
+%   \item Importance is smoothed using an exponential moving average:
+%   \[
+%     \mu_t = \beta\mu_{t-1} + (1-\beta)I_t.
+%   \]
+%   \item A variance-normalized stable score is logged:
+%   \[
+%     S_t = \frac{\mu_t}{\sqrt{\sigma_t^2}+\epsilon}.
+%   \]
+%   \item This makes noisy or unstable rank-allocation behavior easier to inspect.
+% \end{itemize}
+% \end{frame}
+
+% \begin{frame}{Algorithm}
+% \small
+% \begin{enumerate}
+%   \item Input: pretrained model, dataset \(D\), base rank \(r_{\mathrm{base}}\).
+%   \item Compute dataset statistics from \(D\).
+%   \item Compute \(r_{\mathrm{target}}\), \(r_{\mathrm{init}}\), \(\alpha\), dropout, and schedule.
+%   \item Select target modules according to model family and dataset complexity.
+%   \item Train with AdaLoRA using the dataset-aware configuration.
+%   \item At each optimizer step, log raw and stable importance scores for LoRA parameters.
+%   \item Output: trained adapter, final metrics, selected rank, and stability logs.
+% \end{enumerate}
+% \end{frame}
