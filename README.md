@@ -227,6 +227,57 @@ Set `AD_DETECTOR_MAX_LENGTH` to change token truncation length. The default is `
 
 ---
 
+# 🏋️ Training in Background
+
+From the training directory:
+
+```bash
+cd testing/training
+../venv/bin/pip install -r ../requirements.txt
+../venv/bin/wandb login
+```
+
+Edit `config.yaml` to choose the fine-tuning method:
+
+```yaml
+fine_tuning:
+  method: star_lora  # or full
+```
+
+Run training in the background:
+
+```bash
+nohup ../venv/bin/python main.py > train_background.log 2>&1 &
+```
+
+Check progress:
+
+```bash
+tail -f train_background.log
+```
+
+Check the running process:
+
+```bash
+pgrep -af "../venv/bin/python main.py"
+```
+
+Stop the background run:
+
+```bash
+pkill -f "../venv/bin/python main.py"
+```
+
+To use a different config file:
+
+```bash
+nohup env TRAIN_CONFIG=config.yaml ../venv/bin/python main.py > train_background.log 2>&1 &
+```
+
+Training progress is also reported to W&B when `report_to: wandb` is set in `config.yaml`.
+
+---
+
 # 🌍 Deployment Notes
 
 Recommended setup:

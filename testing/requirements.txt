@@ -3,5 +3,9 @@ datasets==3.1.0
 accelerate>=1.14.0
 hf-transfer==0.1.8
 scikit-learn
+matplotlib
 tensorboard
 huggingface_hub<1.0
+peft
+PyYAML
+wandb

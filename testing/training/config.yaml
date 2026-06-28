@@ -1,0 +1,55 @@
+model:
+  id: answerdotai/ModernBERT-large
+  max_length: 512
+
+data:
+  path: testing/data/deepseek_synthetic_reviews.jsonl
+  test_size: 0.1
+  seed: 42
+
+fine_tuning:
+  # Switch this between "full", "lora", "adalora", and "star_lora".
+  method: lora
+
+  # Shared LoRA/AdaLoRA settings. Plain "lora" and "adalora" use rank.
+  # "star_lora" computes rank from the dataset using base/min/max rank.
+  rank: 8
+  base_rank: 8
+  lora_dropout:
+  lora_alpha:
+
+  # Star-LoRA dataset-aware rank settings. Ignored by plain "lora" and "adalora".
+  min_rank: 4
+  max_rank: 48
+
+  # AdaLoRA schedule. Used by "adalora" and "star_lora".
+  init_rank:
+  tinit_fraction: 0.2
+  tfinal_fraction: 0.85
+  delta_fraction: 0.05
+
+  # ModernBERT uses Wqkv and Wo instead of q_proj/v_proj.
+  # Leave target_modules empty to auto-expand these names to exact layer paths.
+  target_modules:
+  modernbert_target_leaf_modules:
+    - Wqkv
+    - Wo
+
+training:
+  output_dir: testing/training/modernbert-large
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 4
+  learning_rate: 5.0e-5
+  num_train_epochs: 5
+  max_steps: -1
+  bf16: true
+  optim: adamw_torch_fused
+  logging_steps: 100
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  load_best_model_at_end: true
+  report_to: wandb
+  wandb_project: spotter-bert-various-dt-various-method
+  run_name: modernbert-spotter
