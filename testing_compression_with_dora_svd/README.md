@@ -83,9 +83,9 @@ compressed after training with layer-wise SVD energy thresholds.
 ```bash
 nohup scripts/run_dora_svd_robustness.sh \
   --preset paper_main_energy \
-  --output_root testing_dora_svd/paper_main_energy_results \
+  --output_root testing_compression_with_dora_svd/paper_main_energy_results \
   --skip_existing \
-  > testing_dora_svd/paper_main_energy.log 2>&1 &
+  > testing_compression_with_dora_svd/paper_main_energy.log 2>&1 &
 ```
 
 Grid:
@@ -106,9 +106,9 @@ Total: 144 runs
 Collect existing results without rerunning:
 
 ```bash
-testing/venv/bin/python testing_dora_svd/run_robustness_experiments.py \
+.venv/bin/python testing_compression_with_dora_svd/run_robustness_experiments.py \
   --preset paper_main_energy \
-  --output_root testing_dora_svd/paper_main_energy_results \
+  --output_root testing_compression_with_dora_svd/paper_main_energy_results \
   --collect_only
 ```
 
@@ -119,8 +119,8 @@ To claim real checkpoint/storage reduction, export compact adapter artifacts
 whose LoRA A/B tensors are physically sliced to each layer's kept rank.
 
 ```bash
-testing/venv/bin/python testing_dora_svd/export_compact_adapter.py \
-  testing_dora_svd/paper_main_energy_results \
+.venv/bin/python testing_compression_with_dora_svd/export_compact_adapter.py \
+  testing_compression_with_dora_svd/paper_main_energy_results \
   --overwrite
 ```
 
@@ -135,7 +135,7 @@ compact_svd_adapter/layers.csv
 The root summary is:
 
 ```text
-testing_dora_svd/paper_main_energy_results/compact_export_summary.csv
+testing_compression_with_dora_svd/paper_main_energy_results/compact_export_summary.csv
 ```
 
 ## Compact Adapter Validation
@@ -145,11 +145,11 @@ back to the original PEFT rank, and comparing them against the full-shape
 pruned adapter.
 
 ```bash
-nohup testing/venv/bin/python testing_dora_svd/validate_compact_adapter.py \
-  testing_dora_svd/paper_main_energy_results \
+nohup .venv/bin/python testing_compression_with_dora_svd/validate_compact_adapter.py \
+  testing_compression_with_dora_svd/paper_main_energy_results \
   --evaluate_full_adapter \
-  --output_csv testing_dora_svd/paper_main_energy_results/compact_validation_results.csv \
-  > testing_dora_svd/compact_validation.log 2>&1 &
+  --output_csv testing_compression_with_dora_svd/paper_main_energy_results/compact_validation_results.csv \
+  > testing_compression_with_dora_svd/compact_validation.log 2>&1 &
 ```
 
 Important columns:

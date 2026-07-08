@@ -27,7 +27,7 @@ from dora_svd_pruning import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATA_PATH = REPO_ROOT / "testing" / "data" / "deepseek_synthetic_reviews.jsonl"
+DEFAULT_DATA_PATH = REPO_ROOT / "training" / "data" / "deepseek_synthetic_reviews.jsonl"
 
 
 def parse_args():
@@ -47,7 +47,10 @@ def parse_args():
         help="Dataset preset. local_review keeps the original repo-local fake-review setup.",
     )
     parser.add_argument("--data_path", default=str(DEFAULT_DATA_PATH))
-    parser.add_argument("--output_dir", default="testing_dora_svd/results/debug")
+    parser.add_argument(
+        "--output_dir",
+        default="testing_compression_with_dora_svd/results/debug",
+    )
     parser.add_argument("--max_length", type=int, default=512)
     parser.add_argument("--test_size", type=float, default=0.1)
     parser.add_argument("--max_samples", type=int, default=None)
@@ -292,7 +295,7 @@ def build_lora_config(args, target_modules, use_dora):
     except TypeError as exc:
         raise TypeError(
             "This experiment needs a PEFT version whose LoraConfig supports "
-            "`use_dora=True`. Upgrade peft in testing/venv if this fails."
+            "`use_dora=True`. Upgrade peft in .venv if this fails."
         ) from exc
 
 

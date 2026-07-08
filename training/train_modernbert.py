@@ -333,6 +333,14 @@ def main() -> None:
         id2label=id2label,
     )
     model, dora_target_modules = apply_dora_adapter(model, dora_cfg)
+    if bool(training_cfg.get("gradient_checkpointing", True)) and hasattr(
+        model,
+        "enable_input_require_grads",
+    ):
+        # The base ModernBERT weights are frozen by DoRA/PEFT. With gradient
+        # checkpointing, input embeddings must require grads so adapter
+        # gradients are preserved through checkpointed blocks.
+        model.enable_input_require_grads()
 
     training_args = build_training_args(training_cfg, output_dir, seed)
     trainer = Trainer(

@@ -62,7 +62,8 @@ def parse_args():
     )
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument(
-        "--output_root", default="testing_dora_svd/paper_main_energy_results"
+        "--output_root",
+        default="testing_compression_with_dora_svd/paper_main_energy_results",
     )
     parser.add_argument(
         "--preset", choices=sorted(PRESETS), default="paper_main_energy"

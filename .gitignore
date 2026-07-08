@@ -33,6 +33,9 @@ testing/training/checkpoint-*/
 # ModernBERT/DoRA training outputs
 training/outputs/
 training/*.log
+training/wandb/
+training/runs/
+training/.cache/
 training/**/__pycache__/
 training/**/checkpoint-*/
 
@@ -55,6 +58,11 @@ testing_dora_svd/*.log
 testing_dora_svd/*_results/
 testing_dora_svd/__pycache__/
 testing_compression_with_dora_svd/*.log
+testing_compression_with_dora_svd/results/
+testing_compression_with_dora_svd/robustness_results/
+testing_compression_with_dora_svd/paper_main_energy_results/
+testing_compression_with_dora_svd/tmp_check_results/
+testing_compression_with_dora_svd/*_results/
 testing_compression_with_dora_svd/__pycache__/
 
 # LaTeX build intermediates
