@@ -2,15 +2,17 @@ import os
 from pathlib import Path
 
 import torch
+from peft import PeftConfig, PeftModel
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 DEFAULT_MODEL_DIR = (
     Path(__file__).resolve().parents[1]
-    / "testing"
     / "training"
-    / "modernbert-large-fake-review-detector"
+    / "outputs"
+    / "modernbert-large-dora-fake-review-detector"
 )
 MODEL_ID = os.getenv("AD_DETECTOR_MODEL", str(DEFAULT_MODEL_DIR))
+BASE_MODEL_ID = os.getenv("AD_DETECTOR_BASE_MODEL")
 MAX_LENGTH = int(os.getenv("AD_DETECTOR_MAX_LENGTH", "512"))
 POSITIVE_LABEL = os.getenv("AD_DETECTOR_POSITIVE_LABEL", "FAKE").lower()
 
@@ -30,8 +32,30 @@ def load_model():
 
     print(f"[ML] Loading model: {MODEL_ID}")
 
+    model_path = Path(MODEL_ID)
+    is_peft_adapter = (model_path / "adapter_config.json").exists()
     new_tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    new_model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID).to(DEVICE)
+
+    if is_peft_adapter:
+        # DoRA fine-tuning saves a PEFT adapter, not a full model checkpoint.
+        # Load the original ModernBERT classifier first, then attach the adapter.
+        peft_config = PeftConfig.from_pretrained(MODEL_ID)
+        base_model_id = BASE_MODEL_ID or peft_config.base_model_name_or_path
+        print(f"[ML] Loading PEFT adapter on base model: {base_model_id}")
+
+        base_model = AutoModelForSequenceClassification.from_pretrained(
+            base_model_id,
+            num_labels=2,
+            label2id={"REAL": 0, "FAKE": 1},
+            id2label={0: "REAL", 1: "FAKE"},
+        )
+        new_model = PeftModel.from_pretrained(base_model, MODEL_ID)
+        new_model.config.label2id = {"REAL": 0, "FAKE": 1}
+        new_model.config.id2label = {0: "REAL", 1: "FAKE"}
+    else:
+        new_model = AutoModelForSequenceClassification.from_pretrained(MODEL_ID)
+
+    new_model = new_model.to(DEVICE)
     new_model.eval()
 
     tokenizer = new_tokenizer
