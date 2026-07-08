@@ -54,6 +54,8 @@ training/**/checkpoint-*/
 testing_dora_svd/*.log
 testing_dora_svd/*_results/
 testing_dora_svd/__pycache__/
+testing_compression_with_dora_svd/*.log
+testing_compression_with_dora_svd/__pycache__/
 
 # LaTeX build intermediates
 Progress_update/*.aux
