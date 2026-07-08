@@ -247,34 +247,38 @@ fine_tuning:
 Run training in the background:
 
 ```bash
-nohup ../venv/bin/python main.py > train_background.log 2>&1 &
+nohup .venv/bin/python training/train_modernbert.py \
+  --config training/config.yaml \
+  > training/modernbert-large.log 2>&1 &
 ```
 
 Check progress:
 
 ```bash
-tail -f train_background.log
+tail -f training/modernbert-large.log
 ```
 
 Check the running process:
 
 ```bash
-pgrep -af "../venv/bin/python main.py"
+pgrep -af "training/train_modernbert.py"
 ```
 
 Stop the background run:
 
 ```bash
-pkill -f "../venv/bin/python main.py"
+pkill -f "training/train_modernbert.py"
 ```
 
 To use a different config file:
 
 ```bash
-nohup env TRAIN_CONFIG=config.yaml ../venv/bin/python main.py > train_background.log 2>&1 &
+nohup .venv/bin/python training/train_modernbert.py \
+  --config path/to/config.yaml \
+  > training/modernbert-large.log 2>&1 &
 ```
 
-Training progress is also reported to W&B when `report_to: wandb` is set in `config.yaml`.
+Training progress is reported to TensorBoard by default. Set `report_to: wandb` in `training/config.yaml` if you want W&B logging.
 
 ---
 
