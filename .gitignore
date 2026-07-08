@@ -14,6 +14,7 @@ backend_server/venv
 ml_server/venv
 trainer/venv
 .env
+.venv/
 testing/venv
 testing/training/modernbert-review-category-router
 testing/training/modernbert-large-fake-review-detector/
@@ -28,6 +29,12 @@ testing/training/wandb/
 testing/training/datasize_runs/
 testing/training/modernbert-*/
 testing/training/checkpoint-*/
+
+# ModernBERT/DoRA training outputs
+training/outputs/
+training/*.log
+training/**/__pycache__/
+training/**/checkpoint-*/
 
 # Model/checkpoint files can be multiple GB each.
 *.pt

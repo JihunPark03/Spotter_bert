@@ -1,11 +1,11 @@
+torch
+numpy
 transformers>=4.48.0
-datasets==3.1.0
+datasets>=3.1.0
 accelerate>=1.14.0
-hf-transfer==0.1.8
-scikit-learn
-matplotlib
-tensorboard
-huggingface_hub<1.0
 peft
+scikit-learn
 PyYAML
+tensorboard
 wandb
+huggingface_hub<1.0
