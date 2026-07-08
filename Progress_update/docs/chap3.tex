@@ -7,8 +7,8 @@ The method extends AdaLoRA with a pre-training dataset analyzer and a training-t
 \begin{enumerate}
   \item Analyze the training subset before fine-tuning.
   \item Convert dataset statistics into AdaLoRA hyperparameters.
-  \item Select target modules according to dataset complexity.
-  % \item Log stability-aware importance scores during training.
+  \item Select target modules when the architecture exposes separable module choices.
+  \item Log stability-aware importance scores during training.
 \end{enumerate}
 \end{frame}
 
@@ -55,8 +55,9 @@ Embedding variance & Estimate input diversity in representation space \\
       \frac{\log(1+N)}{\log(1+5000)}, 0.3, 1.5
     \right).
   \]
-  \item Distribution factor decreases rank when imbalance, sparsity, or skew is high.
-  \item Complexity factor increases rank when entropy or embedding variance is high.
+  \item \(f_{\mathrm{size}}\): larger datasets can support larger adapter capacity.
+  \item \(g_{\mathrm{dist}}\): decreases rank when imbalance, sparsity, or skew suggests overfitting risk.
+  \item \(g_{\mathrm{comp}}\): increases rank when entropy or embedding variance suggests higher task complexity.
 \end{itemize}
 \end{frame}
 
@@ -87,10 +88,10 @@ Embedding variance & Estimate input diversity in representation space \\
 
 \vspace{4pt}
 \begin{itemize}
-  \item \(I_{\mathrm{class}}\): class imbalance.
-  \item \(S_{\mathrm{token}}\): token sparsity.
-  \item \(K_{\mathrm{token}}\): normalized token-frequency skew.
-  \item \(H_{\mathrm{label}}\), \(V_{\mathrm{emb}}\): task complexity indicators.
+  \item \(I_{\mathrm{class}}\), \(S_{\mathrm{token}}\), \(K_{\mathrm{token}}\): risk indicators; high values reduce capacity.
+  \item \(H_{\mathrm{label}}\), \(V_{\mathrm{emb}}\): complexity indicators; high values increase capacity.
+  \item Coefficients are hand-designed heuristic weights; they should be validated by ablation.
+  \item \(\mathrm{clip}(\cdot)\) prevents the rank from becoming too small or too large.
 \end{itemize}
 \end{frame}
 
@@ -107,49 +108,54 @@ Embedding variance & Estimate input diversity in representation space \\
   \[
     p_{\mathrm{drop}} \in [0.05, 0.20].
   \]
-  \item AdaLoRA schedule:
+  \item AdaLoRA schedule controls when rank pruning/allocation happens:
   \[
     t_{\mathrm{init}}=0.2T,\quad
     t_{\mathrm{final}}=0.85T,\quad
     \Delta t=0.05T.
   \]
+  \item \(t_{\mathrm{init}}\): warm-up before pruning; \(t_{\mathrm{final}}\): stop changing rank; \(\Delta t\): update interval.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{ModernBERT Target Modules}
+\begin{frame}{Target Module Policy by Architecture}
+\small
+\begin{block}{Qwen-style LLM}
+Base targets: \texttt{q\_proj}, \texttt{v\_proj}. For complex or sparse datasets, the policy can add \texttt{k\_proj} and \texttt{o\_proj}; with enough data, it can also include FFN modules such as \texttt{gate\_proj}, \texttt{up\_proj}, and \texttt{down\_proj}.
+\end{block}
+
+\begin{block}{BERT / ModernBERT}
+Standard BERT-style models often expose \texttt{query}, \texttt{key}, \texttt{value}, and output projections. ModernBERT instead fuses Q/K/V into \texttt{Wqkv}, with \texttt{Wo} as the attention output.
+\end{block}
+
 \begin{itemize}
-  \item ModernBERT does not use the usual \texttt{q\_proj}/\texttt{v\_proj} names.
-  \item The implementation expands compact module names to exact layer paths:
-  \[
-    \{\texttt{model.layers.*.attn.Wqkv},\ \texttt{model.layers.*.attn.Wo}\}.
-  \]
-  \item This keeps LoRA, AdaLoRA, and Star-LoRA comparable because all adapter methods target the same attention modules.
-  \item The difference is the capacity policy: fixed rank for LoRA/AdaLoRA, dataset-aware rank for Star-LoRA.
+  \item Final ModernBERT experiments fix targets to \texttt{Wqkv} and \texttt{Wo} for fair comparison.
+  \item Star-LoRA makes rank, init rank, alpha, and dropout dataset-aware in this experiment.
 \end{itemize}
 \end{frame}
 
-% \begin{frame}{Stability-Aware Importance Monitoring}
-% \begin{itemize}
-%   \item Raw LoRA parameter importance is computed from parameter-gradient interaction:
-%   \[
-%     I_t(\theta)
-%     =
-%     \mathrm{mean}
-%     \left(
-%       |\theta_t \odot \nabla_{\theta_t}\mathcal{L}|
-%     \right).
-%   \]
-%   \item Importance is smoothed using an exponential moving average:
-%   \[
-%     \mu_t = \beta\mu_{t-1} + (1-\beta)I_t.
-%   \]
-%   \item A variance-normalized stable score is logged:
-%   \[
-%     S_t = \frac{\mu_t}{\sqrt{\sigma_t^2}+\epsilon}.
-%   \]
-%   \item This makes noisy or unstable rank-allocation behavior easier to inspect.
-% \end{itemize}
-% \end{frame}
+\begin{frame}{Stability-Aware Importance Monitoring}
+\small
+\begin{itemize}
+  \item Raw importance is computed from parameter-gradient interaction:
+  \[
+    I_t(\theta)
+    =
+    \mathrm{mean}
+    \left(
+      |\theta_t \odot \nabla_{\theta_t}\mathcal{L}|
+    \right).
+  \]
+  \item Importance is smoothed using exponential moving average and variance:
+  \[
+    \mu_t = \beta\mu_{t-1} + (1-\beta)I_t,
+    \quad
+    S_t = \frac{\mu_t}{\sqrt{\sigma_t^2}+\epsilon}.
+  \]
+  \item \(S_t\) is logged for \texttt{lora\_A}, \texttt{lora\_B}, and AdaLoRA's \texttt{lora\_E}.
+  \item Current implementation uses this for monitoring, not yet to replace PEFT's allocator.
+\end{itemize}
+\end{frame}
 
 % \begin{frame}{Algorithm}
 % \small

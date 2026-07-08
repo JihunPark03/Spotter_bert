@@ -24,6 +24,23 @@ The base target rank, initial rank, dropout, schedule, and target module set are
 \end{block}
 \end{frame}
 
+\begin{frame}{AdaLoRA: SVD-Style Adapter Update}
+\small
+\begin{itemize}
+  \item LoRA uses a fixed low-rank update:
+  \[
+    \Delta W = BA.
+  \]
+  \item AdaLoRA parameterizes the update in an SVD-like form:
+  \[
+    \Delta W \approx P \Lambda Q,
+  \]
+  where \(P\) and \(Q\) are trainable low-rank bases and \(\Lambda\) contains singular-value-like importance weights.
+  \item During training, components with small or low-importance values in \(\Lambda\) can be pruned, and the rank budget can be reallocated to more important modules.
+  \item In PEFT implementation, these appear as \texttt{lora\_A}, \texttt{lora\_B}, and \texttt{lora\_E}.
+\end{itemize}
+\end{frame}
+
 \begin{frame}{Gap in Existing Methods}
 \begin{table}
 \centering

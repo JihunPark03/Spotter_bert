@@ -21,23 +21,41 @@ Metrics & F1, eval loss, runtime, throughput \\
 \begin{frame}{Baselines and Star-LoRA Configuration}
 \begin{table}
 \centering
-\small
-\begin{tabular}{lcccc}
+\scriptsize
+\begin{tabular}{lccccc}
 \toprule
-Method & Rank & Init rank & Alpha & Dropout \\
+Method & Targets & Rank & Init rank & Alpha & Dropout \\
 \midrule
-LoRA & 8 & -- & 16 & 0.10 \\
-AdaLoRA & 8 & 12 & 16 & 0.10 \\
-Star-LoRA & 12 & 24 & 48 & 0.05 \\
+LoRA & Wqkv, Wo & 8 & -- & 16 & 0.10 \\
+AdaLoRA baseline & Wqkv, Wo & 8 & 12 & 16 & 0.10 \\
+Star-LoRA & Wqkv, Wo & 12 & 24 & 48 & 0.05 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \vspace{6pt}
 \begin{itemize}
-  \item Star-LoRA selected a larger rank from the full training set statistics.
+  \item AdaLoRA baseline uses a reasonable manual setting, not a guaranteed tuned optimum.
+  \item Star-LoRA selected a larger capacity from the full training set statistics.
   \item Recorded dataset statistics: balanced labels, token sparsity \(0.450\), label entropy \(\approx 1.0\).
-  \item All adapter methods target ModernBERT \texttt{Wqkv} and \texttt{Wo} modules.
+  \item Target modules are fixed for fair ModernBERT comparison; capacity settings are dataset-aware.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{AdaLoRA Baseline Setting}
+\small
+\begin{itemize}
+  \item Manual AdaLoRA baseline:
+  \[
+    r_{\mathrm{target}}=8,\quad
+    r_{\mathrm{init}}=12,\quad
+    \alpha=16,\quad
+    p_{\mathrm{drop}}=0.10.
+  \]
+  \item \(r_{\mathrm{init}}>r_{\mathrm{target}}\): AdaLoRA starts with extra rank and prunes/reallocates during training.
+  \item \(\alpha\): scaling strength of adapter update.
+  \item \(p_{\mathrm{drop}}\): regularization for adapter inputs.
+  \item This baseline is manually configured AdaLoRA, not best possible tuned AdaLoRA.
 \end{itemize}
 \end{frame}
 

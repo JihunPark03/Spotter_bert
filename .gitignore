@@ -42,3 +42,25 @@ testing/training/checkpoint-*/
 *.tar
 *.tar.gz
 *.tgz
+
+# DoRA post-training direction SVD experiment artifacts
+testing_dora_svd/*.log
+testing_dora_svd/*_results/
+testing_dora_svd/__pycache__/
+
+# LaTeX build intermediates
+Progress_update/*.aux
+Progress_update/*.dvi
+Progress_update/*.fdb_latexmk
+Progress_update/*.fls
+Progress_update/*.log
+Progress_update/*.nav
+Progress_update/*.out
+Progress_update/*.snm
+Progress_update/*.toc
+Research_Achievement/*.aux
+Research_Achievement/*.dvi
+Research_Achievement/*.fdb_latexmk
+Research_Achievement/*.fls
+Research_Achievement/*.log
+Research_Achievement/*.out
