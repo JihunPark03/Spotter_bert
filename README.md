@@ -5,19 +5,9 @@ It combines a Chrome Extension UI, a FastAPI backend, and a dedicated ML inferen
 
 The system is designed to be **fast and modular**, with feedback collection separated from model inference.
 
-## Warning : it only works with Korean review/text
+## Language Scope
 
-# Examples
-For example, Spotter was tested on the following dining review website (https://www.diningcode.com/profile.php?rid=hAebbrQ1gHyi)
-
-Popup view after pressing 'Analyze' button:
-![Popup analysis](assets/screenshots/Screenshot%202026-02-26%20at%2012.12.03.png)
-
-Feedback homepage:
-![Progress and summary](assets/screenshots/Screenshot%202026-02-26%20at%2012.12.42.png)
-
-Feedback page (User can rate the text):
-![Progress and summary](assets/screenshots/Screenshot%202026-02-26%20at%2012.12.50.png)
+Spotter currently works for **English product reviews only**. The training data and ModernBERT classifier are built around English original-vs-synthetic review detection, so Korean or other-language text is outside the supported scope.
 
 ---
 
@@ -55,17 +45,19 @@ Hugging Face Model
 ```
 Spotter/
 │
-├── api-server/          # FastAPI backend
-│   ├── routes/
+├── backend_server/      # FastAPI backend
 │   ├── services/
 │   ├── ml_client.py
 │   └── main.py
 │
-├── ml-server/           # Model inference server
+├── ml_server/           # Model inference server
 │   ├── inference.py
 │   └── requirements.txt
 │
-├── extension/           # Chrome extension UI
+├── manifest.json        # Chrome extension manifest
+├── popup.html/js        # Chrome extension popup
+├── contentScript.js     # Chrome extension content script
+├── training/            # ModernBERT-large DoRA fine-tuning
 │
 └── docker-compose.yml
 ```
@@ -139,8 +131,8 @@ prob_ad = softmax(logits)[ad_label]
 ## 1. Clone Repository
 
 ```
-git clone https://github.com/yourname/spotter.git
-cd spotter
+git clone git@github.com:JihunPark03/Spotter_bert.git
+cd Spotter_bert
 ```
 
 ---
@@ -148,7 +140,7 @@ cd spotter
 ## 2. Start API Server
 
 ```
-cd api-server
+cd backend_server
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -160,7 +152,7 @@ uvicorn main:app --port 8000
 ## 3. Start ML Server
 
 ```
-cd ml-server
+cd ml_server
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -229,19 +221,20 @@ Set `AD_DETECTOR_MAX_LENGTH` to change token truncation length. The default is `
 
 # 🏋️ Training in Background
 
-From the training directory:
+Install training dependencies from the repository root:
 
 ```bash
-cd testing/training
-../venv/bin/pip install -r ../requirements.txt
-../venv/bin/wandb login
+cd /home/jihun/Spotter_bert
+python3 -m venv .venv
+.venv/bin/pip install -r training/requirements.txt
 ```
 
-Edit `config.yaml` to choose the fine-tuning method:
+Edit `training/config.yaml` to adjust DoRA or training settings:
 
 ```yaml
-fine_tuning:
-  method: star_lora  # or full
+dora:
+  rank: 16
+  alpha: 32
 ```
 
 Run training in the background:

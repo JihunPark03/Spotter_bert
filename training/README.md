@@ -2,6 +2,8 @@
 
 This directory fine-tunes Spotter BERT with DoRA adapters on `training/data/deepseek_synthetic_reviews.jsonl`.
 
+This training pipeline is for **English product reviews only**. The dataset labels English `source_review` text as original and English `synthetic_review` text as synthetic.
+
 Each JSONL row is converted into two binary-classification examples:
 
 - `source_review` -> `original` / label `0`
