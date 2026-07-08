@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabEvalText = document.getElementById("tabEvalText");
   const reviewTitle = document.getElementById("reviewTitle");
   const resultTitle = document.getElementById("resultTitle");
-  const uploadBtn = document.getElementById("uploadBtn");
   const langToggle = document.getElementById("langToggle");
   const langToggleLabel = document.getElementById("langToggleLabel");
 
@@ -34,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tabEval: "리뷰 평가하기",
       resultTitle: " 검사 결과 (광고일 확률)",
       sendBtn: "검사하기",
-      uploadBtn: "가게 추천받기",
       langToggleLabel: "언어 변경",
     },
     en: {
@@ -53,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tabEval: "Evaluate Reviews",
       resultTitle: " Result (Ad likelihood)",
       sendBtn: "Analyze",
-      uploadBtn: "Get Store Recommendations",
       langToggleLabel: "Switch language",
     },
   };
@@ -247,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (reviewTitle) reviewTitle.textContent = t.reviewTitle;
     if (resultTitle) resultTitle.textContent = t.resultTitle;
     if (sendBtn) sendBtn.textContent = t.sendBtn;
-    if (uploadBtn) uploadBtn.textContent = t.uploadBtn;
     if (langToggleLabel) langToggleLabel.textContent = currentLang === "ko" ? "EN" : "KO";
     if (langToggle) langToggle.setAttribute("aria-label", t.langToggleLabel);
 

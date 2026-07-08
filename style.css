@@ -205,56 +205,9 @@
   transition: width .4s ease;
 }
 
-
-/* =====  AI 추천  ===== */
-.ai-summary{
-  border:2px solid var(--purple-border);
-  border-radius:8px;
-  background:white;
-  padding:12px 14px;
-  font-size:13px;
-  margin-top:16px;
-  margin-bottom: 16px;
-}
-.ai-summary .highlight{color:var(--primary);font-weight:600;}
-.ai-summary #result{
-  margin-top:6px;
-  color:#333;
-}
 @keyframes spotter-spin{
   to{transform:rotate(360deg);}
 }
-
-/* =====  하단 버튼  ===== */
-.gradation{
-  background:linear-gradient(180deg,#fff 0%,var(--gray-100) 100%);
-  border-radius:var(--radius);
-}
-.button-wrapper{
-  position:sticky;
-  background-color: var(--gray-100);
-  bottom:0;
-  width: 100%;
-  padding: 5px 0 10px;
-}
-.upload-btn{
-  width:100%;
-  margin-top:12px;
-  padding:14px 0 14px;
-  border:none;
-  border-radius:var(--radius);
-  background:var(--primary);
-  color:#fff;
-  font-weight:700;
-  font-size:15px;
-  cursor:pointer;
-  position: sticky;
-  bottom: 10px;
-  display:flex;
-  justify-content: center;
-
-}
-.upload-btn:hover{filter:brightness(.93);}
 
 .home-image{
   display: block;

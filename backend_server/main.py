@@ -90,13 +90,6 @@ async def save_feedback(req: FeedbackRequest, db: Session = Depends(get_db)):
             content={"detail": "Failed to save feedback"},
         )
 
-@app.post("/recommendations")
-async def get_recommendations():
-    return JSONResponse(
-        status_code=501,
-        content={"detail": "Recommendation system disabled in this deployment."}
-    )
-
 # ──────────────── Local Run ────────────────
 if __name__ == "__main__":
     import uvicorn
